@@ -14,5 +14,21 @@ Content-Type: application/json
     "temperature": 20.87974371,
     "humidity": 82.00274423,
     "pH": 6.502985292000001,
-    "rainfall": 202.9355362
+    "moisture": 202.9355362
+}
+
+###
+
+# ANN Prediction Endpoint 
+POST https://crop-prediction-iot.onrender.com/predict 
+Content-Type: application/json
+
+{
+    "N": 82,
+    "P": 50,
+    "K": 14,
+    "temperature": 24.00,
+    "humidity": 28.50,
+    "pH": 8.94,
+    "moisture": 2909
 }

@@ -32,7 +32,7 @@ class InferenceRequest(BaseModel):
     temperature: float
     humidity: float
     pH: float
-    rainfall: float
+    moisture: float
 
 # Define the response schema
 class InferenceResponse(BaseModel):
@@ -48,7 +48,7 @@ def read_root():
 def predict(data: InferenceRequest):
     try:
         # Prepare the input
-        new_data = np.array([[data.N, data.P, data.K, data.temperature, data.humidity, data.pH, data.rainfall]])
+        new_data = np.array([[data.N, data.P, data.K, data.temperature, data.humidity, data.pH, data.moisture]])
         new_data_scaled = scaler.transform(new_data)
 
         # Make predictions
