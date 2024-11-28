@@ -24,11 +24,11 @@ POST https://crop-prediction-iot.onrender.com/predict
 Content-Type: application/json
 
 {
-    "N": 82,
-    "P": 50,
-    "K": 50,
-    "temperature": 24.00,
-    "humidity": 50,
-    "pH": 8.94,
-    "moisture": 100
+    "N": 89,
+    "P": 51,
+    "K": 60,
+    "temperature": -6.40,
+    "humidity": 28.50,
+    "pH": 8.51,
+    "moisture": 62
 }

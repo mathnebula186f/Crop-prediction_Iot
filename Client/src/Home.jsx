@@ -16,85 +16,7 @@ import { PieChart, Pie, Cell } from "recharts";
 function Home() {
   // State to hold the chart data
   // const [chartData, setChartData] = useState([]);
-  const [chartData, setChartData] = useState([
-    {
-      time: "10:00",
-      nitrogen: 50,
-      phosphorus: 20,
-      potassium: 30,
-      temperature: 25,
-      humidity: 60,
-      ph: 6.5,
-      moisture: 100,
-      crop: "Wheat",
-    },
-    {
-      time: "11:00",
-      nitrogen: 60,
-      phosphorus: 25,
-      potassium: 35,
-      temperature: 26,
-      humidity: 65,
-      ph: 6.6,
-      moisture: 120,
-      crop: "Maize",
-    },
-    {
-      time: "12:00",
-      nitrogen: 55,
-      phosphorus: 22,
-      potassium: 28,
-      temperature: 27,
-      humidity: 62,
-      ph: 6.7,
-      moisture: 140,
-      crop: "Cotton",
-    },
-    {
-      time: "13:00",
-      nitrogen: 70,
-      phosphorus: 30,
-      potassium: 40,
-      temperature: 28,
-      humidity: 68,
-      ph: 6.8,
-      moisture: 160,
-      crop: "Corn",
-    },
-    {
-      time: "11:00",
-      nitrogen: 60,
-      phosphorus: 25,
-      potassium: 35,
-      temperature: 26,
-      humidity: 65,
-      ph: 6.6,
-      moisture: 120,
-      crop: "Maize",
-    },
-    {
-      time: "12:00",
-      nitrogen: 55,
-      phosphorus: 22,
-      potassium: 28,
-      temperature: 27,
-      humidity: 62,
-      ph: 6.7,
-      moisture: 140,
-      crop: "Cotton",
-    },
-    {
-      time: "13:00",
-      nitrogen: 70,
-      phosphorus: 30,
-      potassium: 40,
-      temperature: 28,
-      humidity: 68,
-      ph: 6.8,
-      moisture: 160,
-      crop: "Corn",
-    },
-  ]);
+  const [chartData, setChartData] = useState([]);
 
   // Sample data for Pie Chart (replace with real data)
   // const [pieData, setPieData] = useState([]);
@@ -111,18 +33,24 @@ function Home() {
   // Establish socket connection
   useEffect(() => {
     const socket = io("http://localhost:5000");
-    socket.on("data", (data) => {
+    socket.on("new_data", (data) => {
+      console.log(data);
+      const soil_data = JSON.parse(data.data);
+      console.log(soil_data);
+      const prediction = data.prediction;
       const latestData = {
         time: new Date().toLocaleTimeString(), // Updating time for each new data
-        nitrogen: data.N,
-        phosphorus: data.P,
-        potassium: data.K,
-        temperature: data.temperature,
-        humidity: data.humidity,
-        ph: data.ph,
-        moisture: data.moisture,
-        crop: data.label, // Latest crop prediction
+        N: soil_data.nitrogen,
+        P: soil_data.phosphorus,
+        K: soil_data.potassium,
+        temperature: soil_data.temperature,
+        humidity: soil_data.humidity,
+        pH: soil_data.pHValue,
+        moisture: soil_data.moisture,
+        crop: prediction, // Latest crop prediction
       };
+
+      console.log(latestData);
 
       // Update chartData to show only the latest 5 entries
       setChartData((prevData) => {
@@ -132,50 +60,71 @@ function Home() {
 
       // Update pie chart data
       setPieData([
-        { name: "Nitrogen", value: data.N },
-        { name: "Phosphorus", value: data.P },
-        { name: "Potassium", value: data.K },
+        { name: "Nitrogen", value: soil_data.nitrogen },
+        { name: "Phosphorus", value: soil_data.phosphorus },
+        { name: "Potassium", value: soil_data.potassium },
       ]);
 
       // Update table data conditionally
-      if (
-        JSON.stringify(tableData[tableData.length - 1]) !==
-        JSON.stringify(latestData)
-      ) {
-        setTableData([...tableData, latestData]);
-      }
+      setTableData((prevTableData) => {
+        // Compare the latest data with the last entry in tableData based on specific properties
+        const lastEntry = prevTableData[prevTableData.length - 1];
+        if (
+          !lastEntry || // Add if tableData is empty
+          lastEntry.N !== latestData.N ||
+          lastEntry.P !== latestData.P ||
+          lastEntry.K !== latestData.K ||
+          lastEntry.temperature !== latestData.temperature ||
+          lastEntry.humidity !== latestData.humidity ||
+          lastEntry.moisture !== latestData.moisture
+        ) {
+          // Add the latestData only if it's different
+          return [...prevTableData, latestData];
+        }
+        return prevTableData; // No update if data is the same
+      });
     });
 
     // Clean up the connection
     return () => socket.disconnect();
   }, []);
 
-  // // Fetch crop recommendations from the cloud API
   useEffect(() => {
-    //*************Replace the hardcoded data below with 'dataToSend'*************
-    // const {label, ...dataToSend} = tableData[tableData.length - 1];
-    axios
-      .post("https://crop-prediction-iot.onrender.com/predict", {
-        N: 90,
-        P: 42,
-        K: 43,
-        temperature: 20.87974371,
-        humidity: 82.00274423,
-        pH: 6.502985292000001,
-        moisture: 202.9355362,
-      },{
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-      .then((response) => {
-        // console.log("Crop recommendations:", response.data);
-        setCrops(response.data); // Assuming the data contains an array of top 3 crops
-      })
-      .catch((error) =>
-        console.error("Error fetching crop recommendations:", error)
-      );
+    if (tableData.length > 0) {
+      const lastEntry = tableData[tableData.length - 1];
+  
+      // Ensure `lastEntry` is valid
+      if (lastEntry) {
+        const filteredKeys = Object.keys(lastEntry).filter(
+          (key) => key !== "time" && key !== "crop"
+        );
+  
+        // Create a new object with the filtered keys
+        const filteredData = filteredKeys.reduce((obj, key) => {
+          obj[key] = lastEntry[key];
+          return obj;
+        }, {});
+  
+        axios
+          .post(
+            "https://crop-prediction-iot.onrender.com/predict",
+            filteredData,
+            {
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          )
+          .then((response) => {
+            setCrops(response.data); // Assuming the data contains an array of top 3 crops
+          })
+          .catch((error) =>
+            console.error("Error fetching crop recommendations:", error)
+          );
+      }
+    }
   }, [tableData]);
+  
 
   const COLORS = ["#82ca9d", "#8884d8", "#ffc658"];
 
@@ -209,12 +158,12 @@ function Home() {
               <Tooltip />
 
               <Legend />
-              <Bar dataKey="nitrogen" fill="#82ca9d" name="Nitrogen" />
-              <Bar dataKey="phosphorus" fill="#8884d8" name="Phosphorus" />
-              <Bar dataKey="potassium" fill="#ffc658" name="Potassium" />
+              <Bar dataKey="N" fill="#82ca9d" name="Nitrogen" />
+              <Bar dataKey="P" fill="#8884d8" name="Phosphorus" />
+              <Bar dataKey="K" fill="#ffc658" name="Potassium" />
               <Bar dataKey="temperature" fill="#ff8042" name="Temperature" />
               <Bar dataKey="humidity" fill="#8dd1e1" name="Humidity" />
-              <Bar dataKey="ph" fill="#a4de6c" name="pH" />
+              <Bar dataKey="pH" fill="#a4de6c" name="pH" />
               <Bar dataKey="moisture" fill="#d0ed57" name="Moisture" />
               <Bar dataKey="crop" fill="#ff4592" name="Crop" />
             </BarChart>
@@ -264,19 +213,21 @@ function Home() {
               <th>Temperature (°C)</th>
               <th>Humidity (%)</th>
               <th>Moisture (mm)</th>
+              <th>pH</th>
               <th>Best Crop</th>
             </tr>
           </thead>
           <tbody>
             {tableData.map((row, index) => (
               <tr key={index}>
-                <td>{row.timestamp}</td>
-                <td>{row.nitrogen}</td>
-                <td>{row.phosphorus}</td>
-                <td>{row.potassium}</td>
-                <td>{row.temp}</td>
+                <td>{row.time}</td>
+                <td>{row.N}</td>
+                <td>{row.P}</td>
+                <td>{row.K}</td>
+                <td>{row.temperature}</td>
                 <td>{row.humidity}</td>
                 <td>{row.moisture}</td>
+                <td>{row.pH}</td>
                 <td>{row.crop}</td>
               </tr>
             ))}

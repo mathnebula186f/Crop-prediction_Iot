@@ -67,7 +67,7 @@ void connectToMQTT() {
       Serial.print("failed, rc=");
       Serial.print(client.state());
       Serial.println(" retrying in 5 seconds");
-      delay(5000);
+      delay(1000);
     }
   }
 }
@@ -229,5 +229,5 @@ void loop() {
   }
   client.loop();
   sendData();
-  delay(3000);
+  delay(500);
 }

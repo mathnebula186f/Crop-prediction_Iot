@@ -1,6 +1,7 @@
 import paho.mqtt.client as mqtt
 from flask import Flask, render_template
 from flask_socketio import SocketIO
+from flask_cors import CORS
 import tensorflow as tf
 import numpy as np
 import json
@@ -14,7 +15,8 @@ topic = "crop/nutrition/data"
 
 # Flask setup
 app = Flask(__name__)
-socketio = SocketIO(app)
+CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
+socketio = SocketIO(app, cors_allowed_origins="http://localhost:5173")
 
 # MQTT client setup
 mqtt_client = mqtt.Client()
@@ -53,20 +55,24 @@ def on_message(client, userdata, msg):
     
     # Prepare the input data in the expected format
     input_data = np.array([[nitrogen, phosphorus, potassium, temperature, humidity, ph, moisture]])
+    input_data = scaler.transform(input_data)
     
     # Make a prediction using the model
     predictions = model.predict(input_data)
-    top_3_indices = np.argsort(predictions, axis=1)[:, -3:][:, ::-1][0]  # Get top 3
-    top_3_labels = [label.decode('utf-8') for label in label_encoder.inverse_transform(top_3_indices)]
-    top_3_probabilities = predictions[0, top_3_indices]
-    
+    top_index = np.argmax(predictions, axis=1)[0]  # Get the index of the highest probability
+    top_label = label_encoder.inverse_transform([top_index])[0]  # Get the label for the top prediction
+    top_probability = predictions[0, top_index]  # Get the probability of the top prediction
+
     # Print the prediction (for debugging)
-    print(f"Labels: {top_3_labels}")
-    print(f"Probabilities: {top_3_probabilities}")
+    print(f"Top Label: {top_label}")
+    print(f"Top Probability: {top_probability}")
     print(f"Prediction result: {predictions}")
-    
-    # Emit the prediction to the frontend
-    socketio.emit('new_data', {'message': message, 'prediction': predictions.tolist()})
+
+    # Emit the top prediction to the frontend
+    socketio.emit('new_data', {
+        'data': message,
+        'prediction': top_label.decode('utf-8')
+    })
 
 # MQTT connection callback
 def on_connect(client, userdata, flags, rc):
