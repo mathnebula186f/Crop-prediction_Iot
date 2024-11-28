@@ -5,6 +5,7 @@ import tensorflow as tf
 from tensorflow.keras.models import load_model
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 import h5py
+import uvicorn
 
 # Initialize FastAPI app
 app = FastAPI()
