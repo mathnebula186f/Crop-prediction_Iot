@@ -1,0 +1,7 @@
+paho-mqtt
+flask
+flask_socketio
+tensorflow
+scikit-learn
+numpy
+h5py
