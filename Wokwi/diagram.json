@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "author": "Sutharsan V",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": -9.6, "left": 72.04, "attrs": {} },
+    { "type": "chip-npksensor", "id": "chip1", "top": 87.42, "left": 292.8, "attrs": {} },
+    { "type": "chip-moisturesensor", "id": "chip2", "top": 164.22, "left": 292.8, "attrs": {} },
+    {
+      "type": "board-ssd1306",
+      "id": "oled1",
+      "top": 51.14,
+      "left": -124.57,
+      "attrs": { "i2cAddress": "0x3c" }
+    },
+    {
+      "type": "wokwi-dht22",
+      "id": "dht1",
+      "top": 182.7,
+      "left": -111,
+      "attrs": { "humidity": "28.5" }
+    }
+  ],
+  "connections": [
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+    [ "chip1:TX", "esp:16", "green", [ "h-57.6", "v19.2" ] ],
+    [ "chip1:RX", "esp:17", "green", [ "h-67.2", "v9.6" ] ],
+    [ "esp:3V3", "oled1:VCC", "red", [ "h0" ] ],
+    [ "esp:GND.3", "chip1:GND", "black", [ "h9.6", "v28.8" ] ],
+    [ "esp:3V3", "chip2:VCC", "red", [ "h-47.85", "v-201.6", "h211.2", "v355.2" ] ],
+    [ "esp:3V3", "chip1:VCC", "red", [ "h-47.85", "v-201.6", "h211.2", "v278.4" ] ],
+    [ "oled1:GND", "esp:GND.1", "black", [ "v-38.4", "h-48", "v345.6", "h192", "v-220.8" ] ],
+    [ "chip2:GND", "esp:GND.1", "black", [ "h-38.4", "v182.4", "h-201.6", "v-220.8" ] ],
+    [ "oled1:SCL", "esp:22", "orange", [ "v-96", "h269.1", "v76.8" ] ],
+    [ "oled1:SDA", "esp:21", "violet", [ "v-96", "h278.47", "v96" ] ],
+    [ "chip2:A0", "esp:34", "purple", [ "h222.61", "v-336", "h-556.8", "v211.2" ] ],
+    [ "dht1:VCC", "esp:3V3", "red", [ "v-76.8", "h86.4" ] ],
+    [ "dht1:GND", "esp:GND.1", "black", [ "v0" ] ],
+    [ "esp:27", "dht1:SDA", "green", [ "h-57.45", "v105.6" ] ]
+  ],
+  "dependencies": {}
+}
